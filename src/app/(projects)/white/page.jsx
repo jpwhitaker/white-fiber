@@ -1,11 +1,12 @@
 "use client";
 import { Layers, BackSide, DoubleSide, FrontSide, MeshStandardMaterial, VSMShadowMap } from "three";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls, Stars, Box, Plane, Svg } from "@react-three/drei";
+import { OrbitControls, Stars, Box, Plane, Svg, ScrollControls, Scroll, Mask, useMask } from "@react-three/drei";
 import { useControls, Leva, useCreateStore } from "leva";
 import { useSpring, a } from '@react-spring/three';
 import './styles.css';
 import { useState, useEffect } from "react";
+import {Shiba} from './Shiba'
 
 export default function CanvasWrapper() {
   const cameraLayer = new Layers();
@@ -28,8 +29,11 @@ export default function CanvasWrapper() {
   return (
     <div id="canvas-container" className="h-full text-white bg-white relative">
       <Canvas shadows camera={{ position: [0, 0, 5], fov: 50, layers: cameraLayer }} shadowMap={{ type: VSMShadowMap }}>
-        <OrbitControls/>
-        <Scene />
+        <ScrollControls pages={3} damping={0.1}>
+          <Scroll>
+            <Scene />
+          </Scroll>
+        </ScrollControls>
         {/* <Plane
           args={[100, 100]} // Size of the plane
           rotation={[-Math.PI / 2, 0, 0]} // Rotated to lie flat
@@ -42,7 +46,7 @@ export default function CanvasWrapper() {
           />
         </Plane> */}
       </Canvas>
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#aaaaaa" className="w-6 h-6" style={{
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="#aaaaaa" className="w-6 h-6" style={{
         position: 'absolute',
         top: '50%',
         left: '50%',
@@ -64,14 +68,16 @@ const Scene = () => {
   cameraLayer.enable(BOX_LAYER);
   cameraLayer.enable(LIGHT_LAYER);
   const [isFlipped, setIsFlipped] = useState(false);
+  const stencil = useMask(1)
+  const [spot, setSpot] = useState(false)
 
   const materials = [
-    new MeshStandardMaterial({ color: 'white', side: BackSide }),
-    new MeshStandardMaterial({ color: 'white', side: BackSide }),
-    new MeshStandardMaterial({ color: 'white', side: BackSide }),
-    new MeshStandardMaterial({ color: 'white', side: BackSide }),
-    new MeshStandardMaterial({ color: 'red', side: BackSide, visible: false }),
-    new MeshStandardMaterial({ color: 'white', side: BackSide }),
+    new MeshStandardMaterial({ ...stencil, color: 'white', side: BackSide }),
+    new MeshStandardMaterial({ ...stencil, color: 'white', side: BackSide }),
+    new MeshStandardMaterial({ ...stencil, color: 'white', side: BackSide }),
+    new MeshStandardMaterial({ ...stencil, color: 'white', side: BackSide }),
+    new MeshStandardMaterial({ ...stencil, color: 'red', side: BackSide, visible: false }),
+    new MeshStandardMaterial({ ...stencil, color: '#777', side: BackSide }),
   ];
 
   // Define the spring-animated state
@@ -82,10 +88,22 @@ const Scene = () => {
 
   // Event handler to flip the plane
   const handleClick = () => {
+    
     setSpringProps({
       rotation: isFlipped ? [0, 0, 0] : [-Math.PI / 2.2, 0, 0]
     });
+
+    if(!isFlipped){
+      setTimeout(()=>{setSpot(true); console.log("on")}, 800)
+      
+    } else {
+      setSpot(false)
+      console.log("off")
+    }
+
     setIsFlipped(!isFlipped); // Update the flip state
+
+
     console.log('click')
   };
 
@@ -117,12 +135,30 @@ const Scene = () => {
         shadow-bias={-0.0001}
         shadow-radius={10}
       /> */}
+    <group>
+      <spotLight
+        color={0xffffff}
+        intensity={spot ? 15 : 0}
+        position={[0.4, 0.3, 2]}
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-near={0.5}
+        shadow-camera-far={10}
+        shadow-bias={-0.0001}
+        shadow-radius={10}
+        angle={Math.PI / 18} // This defines the cone angle of the spotlight
+        penumbra={0.1} // This defines the softness of the edge of the spotlight
+        decay={1.4} // This defines how the light intensity decreases over distance
+        target-position={[10, 10, -0.5]} // Target the spotlight at a specific point
+      />
+      </group>
 
       <spotLight
         color={0xffffff}
         intensity={15}
         position={[0, 0.0, 3]}
-        castShadow
+        // castShadow
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
         shadow-camera-near={0.5}
@@ -132,27 +168,28 @@ const Scene = () => {
         angle={Math.PI / 4} // This defines the cone angle of the spotlight
         penumbra={0.1} // This defines the softness of the edge of the spotlight
         decay={1.4} // This defines how the light intensity decreases over distance
-        target-position={[0, 0, 0]} // Target the spotlight at a specific point
+        target-position={[5, 0, 0]} // Target the spotlight at a specific point
       />
 
-      <directionalLight
+      {/* <directionalLight
         color={0xffffff}
         intensity={0}
         position={[0, 0, 5]}
         castShadow
         // Other directional light properties
         layers={new Layers().set(LIGHT_LAYER)}
-      />
+      /> */}
       <ambientLight intensity={0.2} />
 
+      <Mask id={1}>
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial color={"red"}/>
+      </Mask>
 
+      <Shiba scale={0.2} position={[0,-0.48, -0.7]} rotation={[0, 0.1 * Math.PI, 0]} stencil={stencil} castShadow/>
 
-      <Stars radius={100} depth={150} count={5000} factor={4} saturation={0} speed={0.01} />
-      {/* <Svg src={`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="black" class="w-6 h-6">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59" />
-</svg>`} /> */}
       <a.group onClick={handleClick} position={[0, 0.5, 0]} name='group'>
-        <mesh name="plane"  position={[0, -0.5, 0]} >
+        <mesh name="plane" position={[0, -0.5, 0]} >
           <planeGeometry args={[1, 1]} />
           <meshStandardMaterial toneMapped={false} side={DoubleSide} />
         </mesh>
