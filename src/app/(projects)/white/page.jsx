@@ -1,7 +1,7 @@
 "use client";
-import { Layers, BackSide, DoubleSide, FrontSide, MeshStandardMaterial } from "three";
+import { Layers, BackSide, DoubleSide, FrontSide, MeshStandardMaterial, VSMShadowMap } from "three";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { PresentationControls, Stars, Box, Plane, Svg } from "@react-three/drei";
+import { OrbitControls, Stars, Box, Plane, Svg } from "@react-three/drei";
 import { useControls, Leva, useCreateStore } from "leva";
 import { useSpring, a } from '@react-spring/three';
 import './styles.css';
@@ -27,14 +27,26 @@ export default function CanvasWrapper() {
 
   return (
     <div id="canvas-container" className="h-full text-white bg-white relative">
-      <Canvas camera={{ position: [0, 0, 5], fov: 50, layers: cameraLayer }}>
+      <Canvas shadows camera={{ position: [0, 0, 5], fov: 50, layers: cameraLayer }} shadowMap={{ type: VSMShadowMap }}>
+        <OrbitControls/>
         <Scene />
+        {/* <Plane
+          args={[100, 100]} // Size of the plane
+          rotation={[-Math.PI / 2, 0, 0]} // Rotated to lie flat
+          position={[0, -0.501, 0]} // Position of the plane
+          receiveShadow // Enables the plane to receive shadows
+        >
+          <meshStandardMaterial
+            attach="material"
+            color="red" // Sets the color of the plane to red
+          />
+        </Plane> */}
       </Canvas>
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#aaaaaa" className="w-6 h-6" style={{
         position: 'absolute',
         top: '50%',
         left: '50%',
-        transform: 'translate(-50%, -50%)', 
+        transform: 'translate(-50%, -50%)',
         pointerEvents: 'none',
         opacity: opacity,
         transition: 'opacity 0.1s ease' // Smooth transition for the opacity
@@ -54,18 +66,18 @@ const Scene = () => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const materials = [
-    new MeshStandardMaterial({ color: 'white', side: DoubleSide, transparent: true, opacity: 1 }),
-    new MeshStandardMaterial({ color: 'white', side: DoubleSide, transparent: true, opacity: 1 }),
-    new MeshStandardMaterial({ color: 'white', side: DoubleSide, transparent: true, opacity: 1 }),
-    new MeshStandardMaterial({ color: 'white', side: DoubleSide, transparent: true, opacity: 1 }),
-    new MeshStandardMaterial({ color: 'red', side: DoubleSide, transparent: true, opacity: 0 }),
-    new MeshStandardMaterial({ color: 'white', side: DoubleSide, transparent: false }),
+    new MeshStandardMaterial({ color: 'white', side: BackSide }),
+    new MeshStandardMaterial({ color: 'white', side: BackSide }),
+    new MeshStandardMaterial({ color: 'white', side: BackSide }),
+    new MeshStandardMaterial({ color: 'white', side: BackSide }),
+    new MeshStandardMaterial({ color: 'red', side: BackSide, visible: false }),
+    new MeshStandardMaterial({ color: 'white', side: BackSide }),
   ];
 
   // Define the spring-animated state
   const [springProps, setSpringProps] = useSpring(() => ({
     rotation: [0, 0, 0], // Initial rotation
-    config: { mass: 5, tension: 400, friction: 50, precision: 0.0001 }
+    config: { mass: 5, tension: 400, friction: 40, precision: 0.0001 }
   }));
 
   // Event handler to flip the plane
@@ -88,28 +100,68 @@ const Scene = () => {
 
   return (
     <>
+      {/* <directionalLight
+        color={0xffffff}
+        intensity={3}
+        position={[1, 3, 5]}
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-near={0.5}
+        shadow-camera-far={10}
+        shadow-camera-left={-5}
+        shadow-camera-right={5}
+        shadow-camera-top={5}
+        shadow-camera-bottom={-5}
+        // shadow-bias={-0.001}
+        shadow-bias={-0.0001}
+        shadow-radius={10}
+      /> */}
+
+      <spotLight
+        color={0xffffff}
+        intensity={15}
+        position={[0, 0.0, 3]}
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-near={0.5}
+        shadow-camera-far={10}
+        shadow-bias={-0.0001}
+        shadow-radius={10}
+        angle={Math.PI / 4} // This defines the cone angle of the spotlight
+        penumbra={0.1} // This defines the softness of the edge of the spotlight
+        decay={1.4} // This defines how the light intensity decreases over distance
+        target-position={[0, 0, 0]} // Target the spotlight at a specific point
+      />
+
       <directionalLight
         color={0xffffff}
-        intensity={2}
+        intensity={0}
         position={[0, 0, 5]}
         castShadow
         // Other directional light properties
         layers={new Layers().set(LIGHT_LAYER)}
       />
-      <ambientLight intensity={1.3} />
+      <ambientLight intensity={0.2} />
+
+
 
       <Stars radius={100} depth={150} count={5000} factor={4} saturation={0} speed={0.01} />
       {/* <Svg src={`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="black" class="w-6 h-6">
   <path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59" />
 </svg>`} /> */}
       <a.group onClick={handleClick} position={[0, 0.5, 0]} name='group'>
-        <mesh name="plane" position={[0, -0.5, 0]} >
+        <mesh name="plane"  position={[0, -0.5, 0]} >
           <planeGeometry args={[1, 1]} />
           <meshStandardMaterial toneMapped={false} side={DoubleSide} />
         </mesh>
       </a.group>
-      <mesh position={[0, 0, -0.5]} material={materials} layers={new Layers().set(BOX_LAYER)} onClick={handleClick}>
-        <boxGeometry args={[1, 1, 1]} />
+      <mesh position={[0, 0, -0.75]}
+        castShadow={true} // Enable casting shadows
+        receiveShadow={true} // Enable receiving shadows
+        material={materials} layers={new Layers().set(BOX_LAYER)} onClick={handleClick}>
+        <boxGeometry args={[1, 1, 1.5]} />
       </mesh></>
   )
 }
