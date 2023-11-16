@@ -9,7 +9,11 @@ import { useState, useEffect } from "react";
 import {Shiba} from './Shiba'
 import useSound from 'use-sound';
 // import click from 'click4.ogg';
-
+//todo, can i import sounds up here?
+//todo, make it so i can click anywhere to open/close the door
+//todo change cursor to pointer on hover over square
+//todo clean up code
+//fix title and icon and description
 
 export default function CanvasWrapper() {
   const cameraLayer = new Layers();
