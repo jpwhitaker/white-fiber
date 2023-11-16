@@ -7,13 +7,17 @@ import { useSpring, a } from '@react-spring/three';
 import './styles.css';
 import { useState, useEffect } from "react";
 import {Shiba} from './Shiba'
+import useSound from 'use-sound';
+// import click from 'click4.ogg';
+
 
 export default function CanvasWrapper() {
   const cameraLayer = new Layers();
   const [opacity, setOpacity] = useState(1); // Initial opacity is 1
 
   useEffect(() => {
-    const handleClick = () => {
+    const handleClick = (e) => {
+      e.preventDefault()
       setOpacity(0); // Set opacity to 0 on click
     };
 
@@ -86,15 +90,35 @@ const Scene = () => {
     config: { mass: 5, tension: 400, friction: 40, precision: 0.0001 }
   }));
 
+  const [playOn] = useSound(
+    './click4.ogg',
+    { volume: 0.75 }
+  );
+  const [playOpen] = useSound(
+    './cloth1.ogg',
+    { volume: 0.75 }
+  );
+  const [playClose] = useSound(
+    './cloth3.ogg',
+    { volume: 0.75 }
+  );
+
   // Event handler to flip the plane
   const handleClick = () => {
-    
+    if(isFlipped){
+      playOpen()
+    } else{
+      playClose()
+    }
     setSpringProps({
       rotation: isFlipped ? [0, 0, 0] : [-Math.PI / 2.2, 0, 0]
     });
 
     if(!isFlipped){
-      setTimeout(()=>{setSpot(true); console.log("on")}, 800)
+      setTimeout(()=>{
+        playOn()
+        setSpot(true); console.log("on")
+      }, 800)
       
     } else {
       setSpot(false)
