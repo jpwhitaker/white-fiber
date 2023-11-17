@@ -29,6 +29,7 @@
     "eslint-config-next": "13.4.19",
     "file-loader": "^6.2.0",
     "framer-motion": "^10.16.1",
+    "gsap": "^3.12.2",
     "leaflet": "^1.9.4",
     "leva": "^0.9.35",
     "next": "13.4.19",
