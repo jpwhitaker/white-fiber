@@ -14,6 +14,7 @@ export default function Scene() {
   const [isFlipped, setIsFlipped] = useState(false);
   const stencil = useMask(1)
   const [spot, setSpot] = useState(false)
+  const [flippedOnce, setFlippedOnce] = useState(false)
   // Ref to track the first render
   const isFirstRender = useRef(true);
 
@@ -23,7 +24,10 @@ export default function Scene() {
 
 
   useEffect(() => {
-    const handleDocumentClick = () => setIsFlipped(prev => !prev);
+    const handleDocumentClick = () => {
+      setIsFlipped(prev => !prev);
+      setFlippedOnce(true);
+    };
     document.addEventListener('click', handleDocumentClick);
 
     // Clean up the event listener when the component unmounts
@@ -80,8 +84,8 @@ export default function Scene() {
       <Mask id={1}>
         <planeGeometry args={[1, 1]} />
       </Mask>
-      <Shiba scale={0.2} position={[0, -0.48, -0.7]} rotation={[0, 0.1 * Math.PI, 0]} stencil={stencil} castShadow />
-      <Flap />
+      <Shiba scale={0.2} position={[0, -0.498, -0.7]} rotation={[0, 0.1 * Math.PI, 0]} stencil={stencil} castShadow />
+      <Flap flippedOnce={flippedOnce}/>
       <OpenBox stencil={stencil} />
     </>
   )
