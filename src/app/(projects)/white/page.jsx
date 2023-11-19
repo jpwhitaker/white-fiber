@@ -19,8 +19,25 @@ export default function CanvasWrapper() {
     const { camera } = useThree();
 
     useEffect(() => {
+      let startY; // To keep track of the start Y position of a touch
+
       const handleScroll = event => {
-        const scrollAmount = event.deltaY * 0.01; // Adjust this value as needed
+        const scrollAmount = event.deltaY * 0.01; // Mouse wheel scroll amount
+        gsap.to(camera.position, {
+          y: `+=${scrollAmount}`,
+          ease: 'power1.out',
+          duration: 0.5
+        });
+      };
+
+      const handleTouchStart = event => {
+        startY = event.touches[0].clientY;
+      };
+
+      const handleTouchMove = event => {
+        const touchY = event.touches[0].clientY;
+        const scrollAmount = (startY - touchY) * 0.02; // Calculate scroll amount based on touch movement
+        startY = touchY; // Update startY for continuous movement
 
         gsap.to(camera.position, {
           y: `+=${scrollAmount}`,
@@ -30,14 +47,19 @@ export default function CanvasWrapper() {
       };
 
       window.addEventListener('wheel', handleScroll);
+      window.addEventListener('touchstart', handleTouchStart);
+      window.addEventListener('touchmove', handleTouchMove);
 
       return () => {
         window.removeEventListener('wheel', handleScroll);
+        window.removeEventListener('touchstart', handleTouchStart);
+        window.removeEventListener('touchmove', handleTouchMove);
       };
     }, [camera]);
 
     return null;
   };
+
 
   return (
     <div id="canvas-container" className="h-full text-white bg-white relative">
