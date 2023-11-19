@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { VSMShadowMap } from "three";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { ScrollControls, Scroll } from "@react-three/drei";
 import { useControls, Leva, useCreateStore } from "leva";
 import './styles.css';
@@ -15,35 +15,35 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function CanvasWrapper() {
   gsap.registerPlugin(ScrollTrigger);
-  const groupRef = useRef();
-  useEffect(() => {
-    const handleScroll = event => {
-      // Calculate the amount to move the group
-      const scrollAmount = event.deltaY * 0.01; // Adjust this value as needed
+  const CameraScroll = () => {
+    const { camera } = useThree();
 
-      // Animate the group position using GSAP
-      if (groupRef.current) {
-        gsap.to(groupRef.current.position, {
-          y: `+=${scrollAmount}`, 
-          ease: 'power1.out', // You can choose different easing functions
-          duration: 0.5 // Adjust duration for smoother or faster animation
+    useEffect(() => {
+      const handleScroll = event => {
+        const scrollAmount = event.deltaY * 0.01; // Adjust this value as needed
+
+        gsap.to(camera.position, {
+          y: `+=${scrollAmount}`,
+          ease: 'power1.out',
+          duration: 0.5
         });
-      }
-    };
+      };
 
-    // Attach the event listener to the window or a specific element
-    window.addEventListener('wheel', handleScroll);
+      window.addEventListener('wheel', handleScroll);
 
-    // Clean up the event listener
-    return () => {
-      window.removeEventListener('wheel', handleScroll);
-    };
-  }, []);
+      return () => {
+        window.removeEventListener('wheel', handleScroll);
+      };
+    }, [camera]);
+
+    return null;
+  };
 
   return (
     <div id="canvas-container" className="h-full text-white bg-white relative">
-      <Canvas shadows camera={{ position: [0, 0, 5], fov: 50 }} shadowmap={{ type: VSMShadowMap }}>
-        <group ref={groupRef}>
+      <Canvas shadows camera={{ position: [0, 0, 5], fov: 50 }} shadowmap={{ type: VSMShadowMap } }>
+        <CameraScroll/>
+        <group>
             <Scene />
       </group>
 
