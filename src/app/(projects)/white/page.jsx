@@ -15,8 +15,23 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function CanvasWrapper() {
   gsap.registerPlugin(ScrollTrigger);
+  const canvasRef = useRef();
   const CameraScroll = () => {
     const { camera } = useThree();
+
+    useEffect(() => {
+      const canvasDom = canvasRef.current;
+      if (!canvasDom) return;
+  
+      const preventDefault = (event) => event.preventDefault();
+      canvasDom.addEventListener('touchmove', preventDefault, { passive: false });
+    
+    
+  
+      return () => {
+        canvasDom.removeEventListener('touchmove', preventDefault);
+      };
+    }, []);
 
     useEffect(() => {
       let startY; // To keep track of the start Y position of a touch
@@ -30,13 +45,15 @@ export default function CanvasWrapper() {
         });
       };
 
+
+
       const handleTouchStart = event => {
         startY = event.touches[0].clientY;
       };
 
       const handleTouchMove = event => {
         const touchY = event.touches[0].clientY;
-        const scrollAmount = (startY - touchY) * 0.02; // Calculate scroll amount based on touch movement
+        const scrollAmount = (startY - touchY) * 0.05; // Calculate scroll amount based on touch movement
         startY = touchY; // Update startY for continuous movement
 
         gsap.to(camera.position, {
@@ -63,7 +80,7 @@ export default function CanvasWrapper() {
 
   return (
     <div id="canvas-container" className="h-full text-white bg-white relative">
-      <Canvas shadows camera={{ position: [0, 0, 5], fov: 50 }} shadowmap={{ type: VSMShadowMap } }>
+      <Canvas ref={canvasRef} shadows camera={{ position: [0, 0, 5], fov: 50 }} shadowmap={{ type: VSMShadowMap } }>
         <CameraScroll/>
         <group>
             <Scene />
