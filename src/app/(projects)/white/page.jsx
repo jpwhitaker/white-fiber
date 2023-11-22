@@ -57,7 +57,7 @@ export default function CanvasWrapper() {
         startY = touchY; // Update startY for continuous movement
 
         gsap.to(camera.position, {
-          y: `+=${scrollAmount}`,
+          y: `-=${scrollAmount}`,
           ease: 'power1.out',
           duration: 0.5
         });
